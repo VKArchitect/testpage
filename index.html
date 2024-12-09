@@ -2,16 +2,54 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-    <link rel="stylesheet" href="index.css"/>
+    <title>WebView Example</title>
+    <style>
+        .command-container {
+            margin-bottom: 20px;
+        }
+        .status {
+            margin-top: 5px;
+            font-size: 14px;
+            color: green;
+        }
+    </style>
+    <script>
+        // Відправка повідомлення в WPF
+        function sendMessageToWpf(command) {
+            const message = JSON.stringify({ Command: command, Data: null });
+            window.chrome.webview.postMessage(message);
+
+            // Очистити статус після відправки
+            const statusElement = document.getElementById(`${command}-status`);
+            statusElement.innerText = "Waiting for response...";
+            statusElement.style.color = "blue";
+        }
+
+        // Обробка отриманого повідомлення від WPF
+        window.chrome.webview.addEventListener('message', (event) => {
+            const message = JSON.parse(event.data);
+            console.log("Received message from WPF:", message);
+
+            // Показуємо статус під відповідною кнопкою
+            const statusElement = document.getElementById(`${message.Command}-status`);
+            if (statusElement) {
+                statusElement.innerText = JSON.stringify(message.Data);
+                statusElement.style.color = "green";
+            } else {
+                console.error("No status element found for command:", message.Command);
+            }
+        });
+    </script>
 </head>
 <body>
-    <h1>Test Page</h1>
-    <button class="send-message-button">Send message</button>
-    <p class="view-loaded-message"></p>
-    <p id="output"></p>
-    <script src="index.js"></script>
+    <div class="command-container">
+        <button onclick="sendMessageToWpf('PromptSelection')">Prompt Selection</button>
+        <div id="PromptSelection-status" class="status"></div>
+    </div>
+    <div class="command-container">
+        <button onclick="sendMessageToWpf('DeleteElements')">Delete Elements</button>
+        <div id="DeleteElements-status" class="status"></div>
+    </div>
 </body>
 </html>
